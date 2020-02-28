@@ -11,6 +11,7 @@ go install github.com/yunkeCN/ali-logger-golang
 
 import "github.com/yunkeCN/ali-logger-golang/logger"
 
+// 在程序入口保证初始化成功
 logger.Init(logger.Options{ProjectName: "middleman-server2", IsDev: true})
 
 logger.Businessf("connect to http://localhost:%s/ for GraphQL playground", port)
