@@ -20,7 +20,7 @@ var (
 )
 
 type Options struct {
-	isDev       bool
+	IsDev       bool
 	ProjectName string
 }
 
@@ -28,10 +28,10 @@ var optionsInner Options
 
 var isDevInner bool
 
-func Init(options2 Options) {
-	optionsInner = options2
+func Init(options Options) {
+	optionsInner = options
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	if optionsInner.isDev {
+	if optionsInner.IsDev {
 		accessLogger = zerologger.Level(zerolog.GlobalLevel())
 		businessLogger = zerologger.Level(zerolog.GlobalLevel())
 		errorLogger = zerologger.Level(zerolog.GlobalLevel())
