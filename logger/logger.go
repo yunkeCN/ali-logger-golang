@@ -26,8 +26,6 @@ type Options struct {
 
 var optionsInner Options
 
-var isDevInner bool
-
 func Init(options Options) {
 	optionsInner = options
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -54,7 +52,7 @@ func getLogger(filePath string) (zerolog.Logger, io.Writer) {
 	}
 	basePath = dir + "/log/"
 
-	if !isDevInner {
+	if !optionsInner.IsDev {
 		basePath = "/var/log/service/"
 	}
 
