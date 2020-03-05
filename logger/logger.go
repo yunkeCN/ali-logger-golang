@@ -54,7 +54,7 @@ func getLogger(filePath string) (zerolog.Logger, io.Writer) {
 	}
 	basePath = dir + "/log/"
 
-	if isDevInner {
+	if !isDevInner {
 		basePath = "/var/log/service/"
 	}
 
