@@ -22,7 +22,7 @@ logger.Errorf("connect to http://localhost:%s/ for GraphQL playground", port)
 logger.Error("connect to http://localhost:%s/ for GraphQL playground")
 
 // 加前缀
-log := logger.WithPrefix("Prefix:, ")
+log := logger.WithPrefix("Prefix, ")
 log.Businessf("connect to http://localhost:%s/ for GraphQL playground", port)
 log.Business("connect to http://localhost:%s/ for GraphQL playground")
 log.Accessf("connect to http://localhost:%s/ for GraphQL playground", port)
