@@ -73,26 +73,60 @@ func getLogger(filePath string) (zerolog.Logger, io.Writer) {
 	return zerologger.Output(f), io.MultiWriter(f)
 }
 
+type Logger struct {
+	prefix string
+}
+
+func (l Logger) Access(msg string) {
+	accessLogger.Info().Msg(fmt.Sprintf("%s%s", l.prefix, msg))
+}
+
+func (l Logger) Accessf(msg string, v ...interface{}) {
+	accessLogger.Info().Msgf(fmt.Sprintf("%s%s", l.prefix, msg), v...)
+}
+
+func (l Logger) Business(msg string) {
+	businessLogger.Trace().Msg(fmt.Sprintf("%s%s", l.prefix, msg))
+}
+
+func (l Logger) Businessf(msg string, v ...interface{}) {
+	businessLogger.Trace().Msgf(fmt.Sprintf("%s%s", l.prefix, msg), v...)
+}
+
+func (l Logger) Error(msg string) {
+	errorLogger.Error().Msg(fmt.Sprintf("%s%s", l.prefix, msg))
+}
+
+func (l Logger) Errorf(msg string, v ...interface{}) {
+	errorLogger.Error().Msgf(fmt.Sprintf("%s%s", l.prefix, msg), v...)
+}
+
+var defaultLogger = Logger{prefix: ""}
+
 func Access(msg string) {
-	accessLogger.Info().Msg(msg)
+	defaultLogger.Access(msg)
 }
 
 func Accessf(msg string, v ...interface{}) {
-	accessLogger.Info().Msgf(msg, v...)
+	defaultLogger.Accessf(msg, v...)
 }
 
 func Business(msg string) {
-	businessLogger.Trace().Msg(msg)
+	defaultLogger.Business(msg)
 }
 
 func Businessf(msg string, v ...interface{}) {
-	businessLogger.Trace().Msgf(msg, v...)
+	defaultLogger.Businessf(msg, v...)
 }
 
 func Error(msg string) {
-	errorLogger.Error().Msg(msg)
+	defaultLogger.Error(msg)
 }
 
 func Errorf(msg string, v ...interface{}) {
-	errorLogger.Error().Msgf(msg, v...)
+	defaultLogger.Errorf(msg, v...)
+}
+
+func WithPrefix(prefix string) Logger {
+	return Logger{prefix: prefix}
 }
