@@ -30,9 +30,9 @@ func Init(options Options) {
 	optionsInner = options
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	if optionsInner.IsDev {
-		accessLogger = zerologger.Level(zerolog.GlobalLevel())
-		businessLogger = zerologger.Level(zerolog.GlobalLevel())
-		errorLogger = zerologger.Level(zerolog.GlobalLevel())
+		accessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+		businessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+		errorLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		AccessWriter = os.Stdout
 		BusinessWriter = os.Stdout
 		ErrorWriter = os.Stderr
