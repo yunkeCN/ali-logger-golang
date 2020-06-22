@@ -20,6 +20,15 @@ logger.Accessf("connect to http://localhost:%s/ for GraphQL playground", port)
 logger.Access("connect to http://localhost:%s/ for GraphQL playground")
 logger.Errorf("connect to http://localhost:%s/ for GraphQL playground", port)
 logger.Error("connect to http://localhost:%s/ for GraphQL playground")
+
+// 加前缀
+log := logger.WithPrefix("Prefix:, ")
+log.Businessf("connect to http://localhost:%s/ for GraphQL playground", port)
+log.Business("connect to http://localhost:%s/ for GraphQL playground")
+log.Accessf("connect to http://localhost:%s/ for GraphQL playground", port)
+log.Access("connect to http://localhost:%s/ for GraphQL playground")
+log.Errorf("connect to http://localhost:%s/ for GraphQL playground", port)
+log.Error("connect to http://localhost:%s/ for GraphQL playground")
 ```
 
 ## 结合gin
