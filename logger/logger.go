@@ -29,6 +29,7 @@ var optionsInner Options
 func Init(options Options) {
 	optionsInner = options
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerologger.Logger = zerologger.With().Caller().Logger()
 	if optionsInner.IsDev {
 		accessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 		businessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
