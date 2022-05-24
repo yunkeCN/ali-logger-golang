@@ -38,24 +38,28 @@ func (l Logger) WithStack(isOutput bool) Logger {
 	return l
 }
 
+//通用字段设置，输出为一级节点
 func (l Logger) WithCommonField(key string, val interface{}) Logger {
 	l.commonFields = append(l.commonFields, map[string]interface{}{key: val})
 
 	return l
 }
 
+//通用字段设置，输出为一级节点
 func (l Logger) WithCommonFields(fields map[string]interface{}) Logger {
 	l.commonFields = append(l.commonFields, fields)
 
 	return l
 }
 
+//自定义字段设置，作为一级节点attatch的内容输出
 func (l Logger) WithField(key string, val interface{}) Logger {
 	l.fields = append(l.fields, map[string]interface{}{key: val})
 
 	return l
 }
 
+//自定义字段设置，作为一级节点attatch的内容输出
 func (l Logger) WithFields(fields map[string]interface{}) Logger {
 	l.fields = append(l.fields, fields)
 
