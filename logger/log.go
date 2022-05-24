@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,6 +14,9 @@ var (
 	accessLogger   zerolog.Logger
 	businessLogger zerolog.Logger
 	errorLogger    zerolog.Logger
+	AccessWriter   io.Writer
+	BusinessWriter io.Writer
+	ErrorWriter    io.Writer
 )
 
 var defaultLogger = WithTag("")
@@ -24,7 +28,7 @@ type Options struct {
 
 var optionsInner Options
 
-func getLogger(filePath string) zerolog.Logger {
+func getLogger(filePath string) (zerolog.Logger, io.Writer) {
 	var basePath string
 	dir, err := os.Getwd()
 	if err != nil {
@@ -51,7 +55,7 @@ func getLogger(filePath string) zerolog.Logger {
 		os.Exit(-1)
 	}
 
-	return zerologger.Output(f)
+	return zerologger.Output(f), io.MultiWriter(f)
 }
 
 func Init(options Options) {
@@ -62,10 +66,13 @@ func Init(options Options) {
 		accessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 		businessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 		errorLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		AccessWriter = os.Stdout
+		BusinessWriter = os.Stdout
+		ErrorWriter = os.Stderr
 	} else {
-		accessLogger = getLogger(fmt.Sprintf("access/%s/out.log", optionsInner.ProjectName))
-		businessLogger = getLogger(fmt.Sprintf("business/%s/out.log", optionsInner.ProjectName))
-		errorLogger = getLogger(fmt.Sprintf("err/%s/error.log", optionsInner.ProjectName))
+		accessLogger, AccessWriter = getLogger(fmt.Sprintf("access/%s/out.log", optionsInner.ProjectName))
+		businessLogger, BusinessWriter = getLogger(fmt.Sprintf("business/%s/out.log", optionsInner.ProjectName))
+		errorLogger, ErrorWriter = getLogger(fmt.Sprintf("err/%s/error.log", optionsInner.ProjectName))
 	}
 
 	zerolog.MessageFieldName = "msg"

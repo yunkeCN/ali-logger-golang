@@ -21,12 +21,27 @@ logger.Access("connect to http://localhost:%s/ for GraphQL playground")
 logger.Errorf("connect to http://localhost:%s/ for GraphQL playground", port)
 logger.Error("connect to http://localhost:%s/ for GraphQL playground")
 
-// 加前缀
-log := logger.WithPrefix("Prefix, ")
+// 使用日志分组输出  WithTag
+//增加、取消调用者输出  WithCaller
+//增加、取消堆栈输出    WithStack 
+// 增加通用字段输出     WithCommonField  WithCommonFields
+// 增加自定义字段输出，统一放到attach节点     WithField  WithFields
+// 取消自定义字段输出     ClearFields
+
+log := logger.WithTag("feedback-online").
+	WithStack(true).
+	WithCommonField("requet.id","12345678").WithCommonFields(map[string]interface{}{"trace.id":"87654321"}).
+	WithField("id","1").WithFields(map[string]interface{}{"name":"test","age":18})
+
 log.Businessf("connect to http://localhost:%s/ for GraphQL playground", port)
 log.Business("connect to http://localhost:%s/ for GraphQL playground")
 log.Accessf("connect to http://localhost:%s/ for GraphQL playground", port)
 log.Access("connect to http://localhost:%s/ for GraphQL playground")
+
+log = logger.WithTag("feedback-online").
+	WithCaller(true).
+	WithCommonField("requet.id","12345678").WithCommonFields(map[string]interface{}{"trace.id":"87654321"}).
+	WithField("id","1").WithFields(map[string]interface{}{"name":"test","age":18})
 log.Errorf("connect to http://localhost:%s/ for GraphQL playground", port)
 log.Error("connect to http://localhost:%s/ for GraphQL playground")
 ```
