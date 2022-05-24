@@ -3,131 +3,141 @@ package logger
 import (
 	"fmt"
 	"github.com/rs/zerolog"
-	zerologger "github.com/rs/zerolog/log"
-	"io"
-	"log"
-	"os"
-	"path/filepath"
+	"github.com/yunkeCN/ali-logger-golang/util"
 )
-
-var (
-	accessLogger   zerolog.Logger
-	businessLogger zerolog.Logger
-	errorLogger    zerolog.Logger
-	AccessWriter   io.Writer
-	BusinessWriter io.Writer
-	ErrorWriter    io.Writer
-)
-
-type Options struct {
-	IsDev       bool
-	ProjectName string
-}
-
-var optionsInner Options
-
-func Init(options Options) {
-	optionsInner = options
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerologger.Logger = zerologger.With().CallerWithSkipFrameCount(4).Logger()
-	if optionsInner.IsDev {
-		accessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-		businessLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-		errorLogger = zerologger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		AccessWriter = os.Stdout
-		BusinessWriter = os.Stdout
-		ErrorWriter = os.Stderr
-	} else {
-		accessLogger, AccessWriter = getLogger(fmt.Sprintf("access/%s/out.log", optionsInner.ProjectName))
-		businessLogger, BusinessWriter = getLogger(fmt.Sprintf("business/%s/out.log", optionsInner.ProjectName))
-		errorLogger, ErrorWriter = getLogger(fmt.Sprintf("err/%s/error.log", optionsInner.ProjectName))
-	}
-}
-
-func getLogger(filePath string) (zerolog.Logger, io.Writer) {
-	var basePath string
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatalln(err)
-		os.Exit(-1)
-	}
-	basePath = dir + "/log/"
-
-	if !optionsInner.IsDev {
-		basePath = "/var/log/service/"
-	}
-
-	s := basePath + filePath
-
-	err = os.MkdirAll(filepath.Dir(s), 0777)
-	if err != nil {
-		log.Fatalln(err)
-		os.Exit(-1)
-	}
-
-	f, err := os.OpenFile(s, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalln(err)
-		os.Exit(-1)
-	}
-
-	return zerologger.Output(f), io.MultiWriter(f)
-}
 
 type Logger struct {
-	prefix string
+	accessLogger   *zerolog.Logger
+	businessLogger *zerolog.Logger
+	errorLogger    *zerolog.Logger
+
+	tag            string
+	isOutputCaller byte //这里使用3态逻辑，以区分是否做了设置   0未设置  1不输出 2输出
+	isOutputStack  byte //这里使用3态逻辑，以区分是否做了设置   0未设置  1不输出 2输出
+	commonFields   []map[string]interface{}
+	fields         []map[string]interface{}
+}
+
+func (l Logger) WithCaller(isOutput bool) Logger {
+	if isOutput {
+		l.isOutputCaller = 2
+	} else {
+		l.isOutputCaller = 1
+	}
+
+	return l
+}
+
+func (l Logger) WithStack(isOutput bool) Logger {
+	if isOutput {
+		l.isOutputStack = 2
+	} else {
+		l.isOutputStack = 1
+	}
+
+	return l
+}
+
+func (l Logger) WithCommonField(key string, val interface{}) Logger {
+	l.commonFields = append(l.commonFields, map[string]interface{}{key: val})
+
+	return l
+}
+
+func (l Logger) WithCommonFields(fields map[string]interface{}) Logger {
+	l.commonFields = append(l.commonFields, fields)
+
+	return l
+}
+
+func (l Logger) WithField(key string, val interface{}) Logger {
+	l.fields = append(l.fields, map[string]interface{}{key: val})
+
+	return l
+}
+
+func (l Logger) WithFields(fields map[string]interface{}) Logger {
+	l.fields = append(l.fields, fields)
+
+	return l
+}
+
+func (l Logger) ClearFields() Logger {
+	l.fields = l.fields[0:0]
+
+	return l
+}
+
+func (l Logger) setDefaultField(zeroEvent *zerolog.Event) {
+	zeroEvent.Str("app", optionsInner.ProjectName)
+	zeroEvent.Str("tag", l.tag)
+}
+
+func (l Logger) msg(zeroEvent *zerolog.Event, msg string, withCaller bool, withStack bool) {
+	l.setDefaultField(zeroEvent)
+
+	if withCaller {
+		zeroEvent.Str("caller", util.GenerateCallerInfo(3))
+	}
+
+	if withStack {
+		zeroEvent.Str("stack", util.Stacks(4))
+	}
+
+	if l.commonFields != nil && len(l.commonFields) > 0 {
+		for _, val := range l.commonFields {
+			zeroEvent.Fields(val)
+		}
+	}
+
+	if l.fields != nil && len(l.fields) > 0 {
+		zeroEvent.Fields(map[string]interface{}{"attach": l.fields})
+	}
+
+	zeroEvent.Msg(msg)
 }
 
 func (l Logger) Access(msg string) {
-	accessLogger.Info().Msg(fmt.Sprintf("%s%s", l.prefix, msg))
+	zeroEvent := l.accessLogger.Info()
+	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
-func (l Logger) Accessf(msg string, v ...interface{}) {
-	accessLogger.Info().Msgf(fmt.Sprintf("%s%s", l.prefix, msg), v...)
+func (l Logger) Accessf(format string, v ...interface{}) {
+	zeroEvent := l.accessLogger.Info()
+	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Business(msg string) {
-	businessLogger.Trace().Msg(fmt.Sprintf("%s%s", l.prefix, msg))
+	zeroEvent := l.businessLogger.Trace()
+	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
-func (l Logger) Businessf(msg string, v ...interface{}) {
-	businessLogger.Trace().Msgf(fmt.Sprintf("%s%s", l.prefix, msg), v...)
+func (l Logger) Businessf(format string, v ...interface{}) {
+	zeroEvent := l.businessLogger.Trace()
+	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Error(msg string) {
-	errorLogger.Error().Msg(fmt.Sprintf("%s%s", l.prefix, msg))
+	zeroEvent := l.errorLogger.Error()
+	l.msg(zeroEvent, msg, l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
-func (l Logger) Errorf(msg string, v ...interface{}) {
-	errorLogger.Error().Msgf(fmt.Sprintf("%s%s", l.prefix, msg), v...)
+func (l Logger) Errorf(format string, v ...interface{}) {
+	zeroEvent := l.errorLogger.Error()
+	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
-var defaultLogger = Logger{prefix: ""}
-
-func Access(msg string) {
-	defaultLogger.Access(msg)
-}
-
-func Accessf(msg string, v ...interface{}) {
-	defaultLogger.Accessf(msg, v...)
-}
-
-func Business(msg string) {
-	defaultLogger.Business(msg)
-}
-
-func Businessf(msg string, v ...interface{}) {
-	defaultLogger.Businessf(msg, v...)
-}
-
-func Error(msg string) {
-	defaultLogger.Error(msg)
-}
-
-func Errorf(msg string, v ...interface{}) {
-	defaultLogger.Errorf(msg, v...)
-}
-
-func WithPrefix(prefix string) Logger {
-	return Logger{prefix: prefix}
+//获取最终是否要输出
+//参数：defaultIsOutput  默认是否输出
+//参数：isSetOutput  设置的是否输出
+func (l Logger) getIsOutput(defaultIsOutput bool, isSetOutput byte) bool {
+	if isSetOutput == 0 { //如果未设置，则直接用默认
+		return defaultIsOutput
+	} else {
+		if isSetOutput == 1 { //如果设置不输出，则不输出
+			return false
+		} else {
+			return true
+		}
+	}
 }
