@@ -112,22 +112,22 @@ func (l Logger) Accessf(format string, v ...interface{}) {
 }
 
 func (l Logger) Business(msg string) {
-	zeroEvent := l.getZeroLogger(l.accessLogger, zerolog.TraceLevel).Trace()
+	zeroEvent := l.getZeroLogger(l.businessLogger, zerolog.TraceLevel).Trace()
 	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Businessf(format string, v ...interface{}) {
-	zeroEvent := l.getZeroLogger(l.accessLogger, zerolog.TraceLevel).Trace()
+	zeroEvent := l.getZeroLogger(l.businessLogger, zerolog.TraceLevel).Trace()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Error(msg string) {
-	zeroEvent := l.getZeroLogger(l.accessLogger, zerolog.ErrorLevel).Error()
+	zeroEvent := l.getZeroLogger(l.errorLogger, zerolog.ErrorLevel).Error()
 	l.msg(zeroEvent, msg, l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
 func (l Logger) Errorf(format string, v ...interface{}) {
-	zeroEvent := l.getZeroLogger(l.accessLogger, zerolog.ErrorLevel).Error()
+	zeroEvent := l.getZeroLogger(l.errorLogger, zerolog.ErrorLevel).Error()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
