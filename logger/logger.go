@@ -102,32 +102,32 @@ func (l Logger) msg(zeroEvent *zerolog.Event, msg string, withCaller bool, withS
 }
 
 func (l Logger) Access(msg string) {
-	zeroEvent := l.accessLogger.Info()
+	zeroEvent := l.getZeroLogger(zerolog.InfoLevel).Info()
 	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Accessf(format string, v ...interface{}) {
-	zeroEvent := l.accessLogger.Info()
+	zeroEvent := l.getZeroLogger(zerolog.InfoLevel).Info()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Business(msg string) {
-	zeroEvent := l.businessLogger.Trace()
+	zeroEvent := l.getZeroLogger(zerolog.TraceLevel).Trace()
 	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Businessf(format string, v ...interface{}) {
-	zeroEvent := l.businessLogger.Trace()
+	zeroEvent := l.getZeroLogger(zerolog.TraceLevel).Trace()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Error(msg string) {
-	zeroEvent := l.errorLogger.Error()
+	zeroEvent := l.getZeroLogger(zerolog.ErrorLevel).Error()
 	l.msg(zeroEvent, msg, l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
 func (l Logger) Errorf(format string, v ...interface{}) {
-	zeroEvent := l.errorLogger.Error()
+	zeroEvent := l.getZeroLogger(zerolog.ErrorLevel).Error()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
@@ -143,5 +143,30 @@ func (l Logger) getIsOutput(defaultIsOutput bool, isSetOutput byte) bool {
 		} else {
 			return true
 		}
+	}
+}
+
+func (l Logger) getZeroLogger(loggerType zerolog.Level) *zerolog.Logger {
+	switch loggerType {
+	case zerolog.InfoLevel:
+		if l.accessLogger != nil { //如果设置，则直接用
+			return l.accessLogger
+		} else {
+			return &accessLogger
+		}
+	case zerolog.TraceLevel:
+		if l.businessLogger != nil { //如果设置，则直接用
+			return l.businessLogger
+		} else {
+			return &businessLogger
+		}
+	case zerolog.ErrorLevel:
+		if l.errorLogger != nil { //如果设置，则直接用
+			return l.errorLogger
+		} else {
+			return &errorLogger
+		}
+	default:
+		panic("其他日志类型不支持")
 	}
 }
