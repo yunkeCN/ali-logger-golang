@@ -102,32 +102,32 @@ func (l Logger) msg(zeroEvent *zerolog.Event, msg string, withCaller bool, withS
 }
 
 func (l Logger) Access(msg string) {
-	zeroEvent := l.getZeroLogger(l.accessLogger, zerolog.InfoLevel).Info()
+	zeroEvent := l.getZeroLogger(zerolog.InfoLevel).Info()
 	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Accessf(format string, v ...interface{}) {
-	zeroEvent := l.getZeroLogger(l.accessLogger, zerolog.InfoLevel).Info()
+	zeroEvent := l.getZeroLogger(zerolog.InfoLevel).Info()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Business(msg string) {
-	zeroEvent := l.getZeroLogger(l.businessLogger, zerolog.TraceLevel).Trace()
+	zeroEvent := l.getZeroLogger(zerolog.TraceLevel).Trace()
 	l.msg(zeroEvent, msg, l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Businessf(format string, v ...interface{}) {
-	zeroEvent := l.getZeroLogger(l.businessLogger, zerolog.TraceLevel).Trace()
+	zeroEvent := l.getZeroLogger(zerolog.TraceLevel).Trace()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(true, l.isOutputCaller), l.getIsOutput(false, l.isOutputStack))
 }
 
 func (l Logger) Error(msg string) {
-	zeroEvent := l.getZeroLogger(l.errorLogger, zerolog.ErrorLevel).Error()
+	zeroEvent := l.getZeroLogger(zerolog.ErrorLevel).Error()
 	l.msg(zeroEvent, msg, l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
 func (l Logger) Errorf(format string, v ...interface{}) {
-	zeroEvent := l.getZeroLogger(l.errorLogger, zerolog.ErrorLevel).Error()
+	zeroEvent := l.getZeroLogger(zerolog.ErrorLevel).Error()
 	l.msg(zeroEvent, fmt.Sprintf(format, v...), l.getIsOutput(false, l.isOutputCaller), l.getIsOutput(true, l.isOutputStack))
 }
 
@@ -146,19 +146,27 @@ func (l Logger) getIsOutput(defaultIsOutput bool, isSetOutput byte) bool {
 	}
 }
 
-func (l Logger) getZeroLogger(zeroLoggger *zerolog.Logger, loggerType zerolog.Level) *zerolog.Logger {
-	if zeroLoggger != nil { //如果设置，则直接用
-		return zeroLoggger
-	} else {
-		switch loggerType {
-		case zerolog.InfoLevel:
+func (l Logger) getZeroLogger(loggerType zerolog.Level) *zerolog.Logger {
+	switch loggerType {
+	case zerolog.InfoLevel:
+		if l.accessLogger != nil { //如果设置，则直接用
+			return l.accessLogger
+		} else {
 			return &accessLogger
-		case zerolog.TraceLevel:
-			return &businessLogger
-		case zerolog.ErrorLevel:
-			return &errorLogger
-		default:
-			panic("其他类型不支持")
 		}
+	case zerolog.TraceLevel:
+		if l.businessLogger != nil { //如果设置，则直接用
+			return l.businessLogger
+		} else {
+			return &businessLogger
+		}
+	case zerolog.ErrorLevel:
+		if l.errorLogger != nil { //如果设置，则直接用
+			return l.errorLogger
+		} else {
+			return &errorLogger
+		}
+	default:
+		panic("其他日志类型不支持")
 	}
 }
